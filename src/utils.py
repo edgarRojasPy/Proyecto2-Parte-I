@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 import re
+from difflib import SequenceMatcher
 
 def cargar_datos(ruta_archivo):
     # Carga los datos del archivo CSV utilizando Numpy
@@ -111,3 +112,22 @@ def imprimir_bigotes(serie):
 
     print(f"Límite inferior (bigote inferior): {limite_inferior}")
     print(f"Límite superior (bigote superior): {limite_superior}")
+
+def comparar_cadenas(df, columna, umbral=0.8):
+    resultados = []
+    valores_unicos = df[columna].dropna()
+    for i in range(len(valores_unicos)):
+        for j in range(i + 1, len(valores_unicos)):
+            cadena1 = valores_unicos[i]
+            cadena2 = valores_unicos[j]
+            ratio = SequenceMatcher(None, cadena1, cadena2).ratio()
+            #print(f'Control de {valores_unicos[i]} contra {valores_unicos[j]} ratio {ratio}')
+            # Si el porcentaje de coincidencia es mayor o igual al umbral, lo añadimos a los resultados
+            if  umbral<ratio<1:
+                resultados.append((cadena1, cadena2, ratio))
+
+    # Convertir los resultados a un DataFrame para una visualización más fácil
+    df_resultados = pd.DataFrame(resultados, columns=['Cadena 1', 'Cadena 2', 'Similitud'])
+    df_resultados.drop_duplicates(['Cadena 1','Cadena 2'], inplace=True)
+    #print(df_resultados)
+    return df_resultados
